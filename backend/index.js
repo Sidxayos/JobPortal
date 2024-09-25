@@ -15,18 +15,16 @@ connectDB();
 
 const app = express();
 
-const _dirname = path.dirname(new URL(import.meta.url).pathname);
-
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// CORS options
 const corsOptions = {
     origin: process.env.CORS_ORIGIN || "https://jobportal-2ptm.onrender.com", 
     credentials: true,
 };
-
 app.use(cors(corsOptions));
 
 const PORT = process.env.PORT || 3000;
@@ -38,11 +36,12 @@ app.use("/api/v1/job", jobRoute);
 app.use("/api/v1/application", applicationRoute);
 
 // Serve static files from the frontend
-app.use(express.static(path.join(_dirname, "/frontend/dist")));
+const __dirname = path.resolve(); // Correctly resolving the directory name
+app.use(express.static(path.join(__dirname, "frontend", "dist")));
 
-
+// Serve the index.html file for all other routes
 app.get('*', (req, res) => {
-    res.sendFile(path.resolve(_dirname, "frontend", "dist", "index.html"));
+    res.sendFile(path.join(__dirname, "frontend", "dist", "index.html")); 
 });
 
 // Global error handling middleware
