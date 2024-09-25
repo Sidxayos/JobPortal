@@ -6,7 +6,6 @@ import { Input } from "../ui/input";
 import { RadioGroup } from "../ui/radio-group";
 import { Button } from "../ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { USER_API_END_POINT } from "@/utils/constant";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
@@ -22,7 +21,7 @@ const Signup = () => {
     file: "",
   });
 
-  const { loading,user } = useSelector((store) => store.auth);
+  const { loading, user } = useSelector((store) => store.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -34,8 +33,25 @@ const Signup = () => {
     setInput({ ...input, file: e.target.files?.[0] });
   };
 
+  const validatePhoneNumber = (number) => {
+    const regex = /^[0-9]{10}$/; // Simple regex for 10 digit phone numbers
+    return regex.test(number);
+  };
+
   const submitHandler = async (e) => {
     e.preventDefault();
+
+    // Check if role is selected
+    if (!input.role) {
+      toast.error("Please select a role.");
+      return;
+    }
+
+    // Check if phone number is valid
+    if (!validatePhoneNumber(input.phoneNumber)) {
+      toast.error("Please enter a valid phone number.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("fullname", input.fullname);
@@ -49,7 +65,7 @@ const Signup = () => {
 
     try {
       dispatch(setLoading(true));
-      const res = await axios.post(`${USER_API_END_POINT}/register`, formData, {
+      const res = await axios.post("https://jobportal-2ptm.onrender.com/api/v1/user/register", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -62,17 +78,18 @@ const Signup = () => {
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.response.data.message);
+      const errorMessage = error?.response?.data?.message || "An error occurred. Please try again.";
+      toast.error(errorMessage);
     } finally {
       dispatch(setLoading(false));
     }
   };
 
-  useEffect(()=>{
-    if(user){
+  useEffect(() => {
+    if (user) {
       navigate("/");
     }
-  },[navigate,user])
+  }, [navigate, user]);
 
   return (
     <div>
@@ -90,7 +107,7 @@ const Signup = () => {
               value={input.fullname}
               name="fullname"
               onChange={changeEventHandler}
-              placeholder="e.g John"
+              placeholder="e.g. John"
             />
           </div>
           <div className="my-2">
@@ -100,7 +117,7 @@ const Signup = () => {
               value={input.email}
               name="email"
               onChange={changeEventHandler}
-              placeholder="e.g patel@gmail.com"
+              placeholder="e.g. patel@gmail.com"
             />
           </div>
           <div className="my-2">
@@ -110,7 +127,7 @@ const Signup = () => {
               value={input.phoneNumber}
               name="phoneNumber"
               onChange={changeEventHandler}
-              placeholder="e.g 8080808080"
+              placeholder="e.g. 8080808080"
             />
           </div>
           <div className="my-2">
@@ -129,23 +146,25 @@ const Signup = () => {
                 <Input
                   type="radio"
                   name="role"
+                  id="role-student" // Added id for accessibility
                   value="student"
-                  checked={input.role == "student"}
+                  checked={input.role === "student"}
                   onChange={changeEventHandler}
                   className="cursor-pointer"
                 />
-                <Label htmlFor="r1">Student</Label>
+                <Label htmlFor="role-student">Student</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Input
                   type="radio"
                   name="role"
+                  id="role-recruiter" // Added id for accessibility
                   value="recruiter"
-                  checked={input.role == "recruiter"}
+                  checked={input.role === "recruiter"}
                   onChange={changeEventHandler}
                   className="cursor-pointer"
                 />
-                <Label htmlFor="r2">Recruiter</Label>
+                <Label htmlFor="role-recruiter">Recruiter</Label>
               </div>
             </RadioGroup>
             <div className="flex items-center gap-2">
@@ -158,16 +177,13 @@ const Signup = () => {
               />
             </div>
           </div>
-          {loading ? (
-            <Button className="w-full my-4">
-              {" "}
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait{" "}
-            </Button>
-          ) : (
-            <Button type="submit" className="w-full my-4">
-              Signup
-            </Button>
-          )}
+          <Button type="submit" className="w-full my-4" disabled={loading}>
+            {loading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              "Signup"
+            )}
+          </Button>
           <span className="text-sm">
             Already have an account?{" "}
             <Link to="/login" className="text-blue-600">

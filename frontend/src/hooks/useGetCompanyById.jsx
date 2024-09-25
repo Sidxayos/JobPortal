@@ -1,5 +1,5 @@
 import { setSingleCompany } from '@/redux/companySlice';
-import { COMPANY_API_END_POINT } from '@/utils/constant';
+//import { COMPANY_API_END_POINT } from '@/utils/constant';
 import axios from 'axios';
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux';
@@ -9,7 +9,8 @@ const UseGetCompanyById = (companyId) => {
     useEffect(() => {
         const fetchSingleCompany = async () => {
             try {
-                const res = await axios.get(`${COMPANY_API_END_POINT}/get/${companyId}`,{withCredentials:true});
+                axios.defaults.withCredentials = true;
+                const res = await axios.get(`https://jobportal-2ptm.onrender.com/api/v1/company/getcompany/${companyId}`);
                 if(res.data.success){
                     dispatch(setSingleCompany(res.data.company));
                 } else {

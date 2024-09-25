@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -13,24 +13,33 @@ import { PopoverTrigger } from "@radix-ui/react-popover";
 import { MoreHorizontal } from "lucide-react";
 import { useSelector } from "react-redux";
 import axios from "axios";
-import { APPLICATION_API_END_POINT } from "@/utils/constant";
 import { toast } from "sonner";
 
 const shortlistingStatus = ["Accepted", "Rejected"];
-    const ApplicantsTable = () => {
-    const { applicants } = useSelector((store) => store.application);
 
-    const statusHandler = async (status, id) => {
-      try {
-        axios.defaults.withCredentials = true;
-        const res = await axios.post(`${APPLICATION_API_END_POINT}/status/${id}/update`,{status});
-        if(res.data.success) {
-          toast.success(res.data.message);
-        }
-      } catch (error) {
-        toast.error(error.response.data.message);
+const ApplicantsTable = () => {
+  const { applicants } = useSelector((store) => store.application);
+  const [loadingId, setLoadingId] = useState(null); 
+
+  const statusHandler = async (status, id) => {
+    try {
+      setLoadingId(id); 
+      const res = await axios.post(
+        `https://jobportal-2ptm.onrender.com/api/v1/application/status/${id}/update`,
+        { status },
+        { withCredentials: true }
+      );
+      if (res.data.success) {
+        toast.success(res.data.message);
       }
+    } catch (error) {
+      
+      const errorMessage = error.response?.data?.message || "An error occurred";
+      toast.error(errorMessage);
+    } finally {
+      setLoadingId(null); 
     }
+  };
 
   return (
     <div>
@@ -54,8 +63,7 @@ const shortlistingStatus = ["Accepted", "Rejected"];
                 <TableCell>{item?.applicant?.email}</TableCell>
                 <TableCell>{item?.applicant?.phoneNumber}</TableCell>
                 <TableCell>
-                  {
-                    item.applicant?.profile?.resume ? 
+                  {item.applicant?.profile?.resume ? (
                     <a
                       className="text-blue-600 cursor-pointer"
                       href={item?.applicant?.profile?.resume}
@@ -63,8 +71,10 @@ const shortlistingStatus = ["Accepted", "Rejected"];
                       rel="noopener noreferrer"
                     >
                       {item?.applicant?.profile?.resumeOriginalName}
-                    </a> : <span>NA</span>
-                  }
+                    </a>
+                  ) : (
+                    <span>NA</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   {new Date(item?.applicant.createdAt)
@@ -82,17 +92,17 @@ const shortlistingStatus = ["Accepted", "Rejected"];
                       <MoreHorizontal />
                     </PopoverTrigger>
                     <PopoverContent className="w-32">
-                      {shortlistingStatus.map((status, index) => {
-                        return (
-                          <div
-                            onClick={()=> statusHandler(status, item?._id)}
-                            key={index}
-                            className="flex w-fit items-center my-2 cursor-pointer"
-                          >
-                            <span>{status}</span>
-                          </div>
-                        );
-                      })}
+                      {shortlistingStatus.map((status, index) => (
+                        <div
+                          onClick={() => statusHandler(status, item?._id)}
+                          key={index}
+                          className="flex w-fit items-center my-2 cursor-pointer"
+                        >
+                          <span>
+                            {loadingId === item._id ? "Loading..." : status}
+                          </span>
+                        </div>
+                      ))}
                     </PopoverContent>
                   </Popover>
                 </TableCell>

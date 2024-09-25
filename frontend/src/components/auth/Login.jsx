@@ -1,4 +1,3 @@
-// video at 4:3:50
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Navbar from "../shared/Navbar";
@@ -7,7 +6,7 @@ import { Input } from "../ui/input";
 import { RadioGroup } from "../ui/radio-group";
 import { Button } from "../ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { USER_API_END_POINT } from "@/utils/constant";
+//import { USER_API_END_POINT } from "@/utils/constant";
 import { toast } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
 import { setLoading, setUser } from "@/redux/authSlice";
@@ -20,7 +19,7 @@ const Login = () => {
     role: "",
   });
 
-  const { loading,user } = useSelector((store) => store.auth);
+  const { loading, user } = useSelector((store) => store.auth);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -33,7 +32,7 @@ const Login = () => {
 
     try {
       dispatch(setLoading(true));
-      const res = await axios.post(`${USER_API_END_POINT}/login`, input, {
+      const res = await axios.post("https://jobportal-2ptm.onrender.com/api/v1/user/login", input, {
         headers: {
           "content-type": "application/json",
         },
@@ -46,17 +45,18 @@ const Login = () => {
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.response.data.message);
+      const errorMessage = error?.response?.data?.message || "An error occurred. Please try again.";
+      toast.error(errorMessage);
     } finally {
       dispatch(setLoading(false));
     }
   };
 
-  useEffect(()=>{
-    if(user){
+  useEffect(() => {
+    if (user) {
       navigate("/");
     }
-  },[navigate,user])
+  }, [navigate, user]);
 
   return (
     <div>
@@ -84,7 +84,7 @@ const Login = () => {
               value={input.password}
               name="password"
               onChange={changeEventHandler}
-              placeholder="patel@gmail.com"
+              placeholder="Enter your password" // Updated placeholder
             />
           </div>
           <div className="flex items-center justify-between">
@@ -93,30 +93,31 @@ const Login = () => {
                 <Input
                   type="radio"
                   name="role"
+                  id="role-student" // Added id for accessibility
                   value="student"
                   checked={input.role === "student"}
                   onChange={changeEventHandler}
                   className="cursor-pointer"
                 />
-                <Label htmlFor="r1">Student</Label>
+                <Label htmlFor="role-student">Student</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Input
                   type="radio"
                   name="role"
+                  id="role-recruiter" // Added id for accessibility
                   value="recruiter"
                   checked={input.role === "recruiter"}
                   onChange={changeEventHandler}
                   className="cursor-pointer"
                 />
-                <Label htmlFor="r2">Recruiter</Label>
+                <Label htmlFor="role-recruiter">Recruiter</Label>
               </div>
             </RadioGroup>
           </div>
           {loading ? (
-            <Button className="w-full my-4">
-              {" "}
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait{" "}
+            <Button className="w-full my-4" disabled>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait
             </Button>
           ) : (
             <Button type="submit" className="w-full my-4">

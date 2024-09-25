@@ -13,7 +13,6 @@ import {
   SelectValue,
 } from "../ui/select";
 import axios from "axios";
-import { JOB_API_END_POINT } from "@/utils/constant";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -34,37 +33,48 @@ const PostJob = () => {
   const navigate = useNavigate();
 
   const { companies } = useSelector((store) => store.company);
+  
   const changeEventHandler = (e) => {
     setInput({ ...input, [e.target.name]: e.target.value });
   };
 
   const selectChangeHandler = (value) => {
-    const selectedCompany = companies.find((company)=> company.name.toLowerCase() == value);
-    setInput({...input, companyId:selectedCompany._id});
-};
+    const selectedCompany = companies.find(company => company.name.toLowerCase() === value);
+    setInput({ ...input, companyId: selectedCompany?._id });
+  };
 
-const submitHandler = async (e) => {
-    e.preventDefault();
-    try {
-        setLoading(true);
-        const res = await axios.post(`${JOB_API_END_POINT}/post`, input,{
-            headers:{
-                'Content-Type':'application/json'
-            },
-            withCredentials:true
-        });
-        if(res.data.success){
-            toast.success(res.data.message);
-            navigate("/admin/jobs");
-        }
-    } catch (error) {
-        toast.error(error.response.data.message);
-    } finally{
-        setLoading(false);
+  const validateForm = () => {
+    const { title, description, requirements, salary, location, jobType, experience, position } = input;
+    if (!title || !description || !requirements || !salary || !location || !jobType || !experience || position <= 0) {
+      toast.error("Please fill out all fields correctly.");
+      return false;
     }
-    
-}
+    return true;
+  };
 
+  const submitHandler = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return; // Validate before proceeding
+
+    try {
+      setLoading(true);
+      const res = await axios.post(`https://jobportal-2ptm.onrender.com/api/v1/job/postjob`, input, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        withCredentials: true
+      }); 
+      if (res.data.success) {
+        toast.success(res.data.message);
+        navigate("/admin/jobs");
+      }
+    } catch (error) {
+      const errorMessage = error?.response?.data?.message || "An error occurred. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div>
@@ -159,30 +169,24 @@ const submitHandler = async (e) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {
-                        companies.map((company) => {
-                            return (
-                                <SelectItem key={company._id} value={company?.name?.toLowerCase()}>{company.name}</SelectItem>
-                            )
-                        })
-                    }
+                    {companies.map((company) => (
+                      <SelectItem key={company._id} value={company?.name?.toLowerCase()}>{company.name}</SelectItem>
+                    ))}
                   </SelectGroup>
                 </SelectContent>
               </Select>
             )}
           </div>
-          {loading ? (
-            <Button className="w-full my-4">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait
-            </Button>
-          ) : (
-            <Button type="submit" className="w-full my-4">
-              Update
-            </Button>
-          )}
-          {companies.length == 0 && (
+          <Button type="submit" className="w-full my-4" disabled={loading}>
+            {loading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              "Post Job"
+            )}
+          </Button>
+          {companies.length === 0 && (
             <p className="text-xs text-red-600 font-bold text-center my-3">
-              *Please register a company first, before postion a job
+              *Please register a company first, before posting a job
             </p>
           )}
         </form>

@@ -4,7 +4,7 @@ import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { APPLICATION_API_END_POINT, JOB_API_END_POINT } from '@/utils/constant';
+//import { APPLICATION_API_END_POINT, JOB_API_END_POINT } from '@/utils/constant';
 import { setSingleJob } from '@/redux/jobSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
@@ -16,12 +16,13 @@ const JobDescription = () => {
   const [isApplied, setIsApplied] = useState(isIntiallyApplied);
 
   const params = useParams();
-  const jobId = params.id;
+  //const jobId = params.id;
   const dispatch = useDispatch();
   
   const applyJobHandler = async () => {
       try {
-        const res = await axios.get(`${APPLICATION_API_END_POINT}/apply/${jobId}`,{withCredentials:true});
+        axios.defaults.withCredentials = true;
+        const res = await axios.get(`https://jobportal-2ptm.onrender.com/api/v1/application/apply/${params.id}`);
         if(res.data.success){
           setIsApplied(true); // update kra local state 
           const updatedSingleJob = {...singleJob, applications:[...singleJob.applications,{applicant:user?._id}]}
@@ -37,7 +38,8 @@ const JobDescription = () => {
   useEffect(() => {
     const fetchSingleJob = async () => {
         try {
-            const res = await axios.get(`${JOB_API_END_POINT}/get/${jobId}`,{withCredentials:true});
+          axios.defaults.withCredentials = true;
+          const res = await axios.get(`https://jobportal-2ptm.onrender.com/api/v1/job/${params.id}`);
             if(res.data.success){
                 dispatch(setSingleJob(res.data.job));
                 setIsApplied(res.data.job.applications.some(application=>application.applicant == user?._id)) 
@@ -49,7 +51,7 @@ const JobDescription = () => {
         }
     };
     fetchSingleJob();
-},[jobId,dispatch, user?._id]);
+},[params.id,dispatch, user?._id]);
 
   return (
     <div className='max-w-7xl mx-auto my-10'>
